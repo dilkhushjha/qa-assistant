@@ -1,0 +1,11 @@
+{
+  "//input[@id='broken-username']": "//*[@id='user-name']",
+  "//input[@id='broken-password']": "//*[@id='password']",
+  "//input[@id='broken-login-btn']": "//*[@id='login-button']",
+  "//button[@id='broken-add-backpack']": "//*[@id='add-to-cart-sauce-labs-backpack']",
+  "//button[@id='broken-checkout']": "//*[@id='checkout']",
+  "//input[@id='broken-fname']": "//*[@id='first-name']",
+  "//input[@id='broken-lname']": "//*[@id='last-name']",
+  "//input[@id='broken-zip']": "//*[@id='postal-code']",
+  "//input[@id='broken-continue']": "//*[@id='continue']"
+}

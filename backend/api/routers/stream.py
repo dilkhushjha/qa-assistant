@@ -1,27 +1,32 @@
 """
 stream.py router — Server-Sent Events for live run streaming.
-
-GET /stream/{run_id}   — streams logs + metrics for a single script run
-GET /stream/batch/{id} — streams batch-level progress (completed/total counter)
+GET /stream/{run_id}       streams logs + metrics for a script run
+GET /stream/batch/{id}     streams batch-level progress counter
 """
-
-import json
-import time
-from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import StreamingResponse
-from core import run_context
-from core.database import engine, batches, script_runs
 from sqlalchemy import select
+from core.database import engine, batches, script_runs
+from core import run_context
+from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException
+import time
+import json
+import sys
+import os
+
+_BACKEND_DIR = os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
+
 
 router = APIRouter(prefix="/stream", tags=["Stream"])
 
 
 @router.get("/{run_id}")
-def stream_run(run_id: str, request: Request):
+def stream_run(run_id: str):
     ctx = run_context.get(run_id)
 
     if not ctx:
-        # Run may have already finished — send snapshot from DB and close
         with engine.connect() as conn:
             row = conn.execute(
                 select(script_runs).where(script_runs.c.id == run_id)
@@ -51,8 +56,7 @@ def stream_run(run_id: str, request: Request):
 
 
 @router.get("/batch/{batch_id}")
-def stream_batch(batch_id: str, request: Request):
-    """Streams batch progress: completed/total counter every second."""
+def stream_batch(batch_id: str):
     def _batch():
         while True:
             with engine.connect() as conn:

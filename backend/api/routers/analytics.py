@@ -1,37 +1,31 @@
 """
 analytics.py router — Insights, trends, flakiness detection.
-
-GET /analytics/overview     High-level stats (heal rate, trends, top failures)
-GET /analytics/flakiness    Scripts that fail and pass intermittently
-GET /analytics/selectors    Most-healed selectors (top breakages)
-GET /analytics/usage        Daily usage vs tier limits
 """
-
-from fastapi import APIRouter, Request
-from sqlalchemy import select, func
-from core.database import (
-    engine, script_runs, heal_events, usage_log, batches,
-    get_analytics
-)
+from datetime import datetime
 from core.config import TIER_LIMITS
+from core.database import engine, script_runs, heal_events, usage_log, batches, get_analytics
+from sqlalchemy import select
+from fastapi import APIRouter, Request
 from collections import defaultdict
-from datetime import datetime, timedelta
+import sys
+import os
+
+_BACKEND_DIR = os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
+
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 
 @router.get("/overview")
 def overview(request: Request, days: int = 30):
-    tenant = request.state.tenant
-    return get_analytics(tenant["id"], days)
+    return get_analytics(request.state.tenant["id"], days)
 
 
 @router.get("/flakiness")
 def flakiness(request: Request, limit: int = 20):
-    """
-    Detect flaky scripts: scripts that have both passed and failed
-    across different runs. Sorted by flakiness score (fail_rate).
-    """
     tenant = request.state.tenant
     with engine.connect() as conn:
         rows = conn.execute(
@@ -39,8 +33,7 @@ def flakiness(request: Request, limit: int = 20):
             .order_by(script_runs.c.created_at.desc()).limit(500)
         ).mappings().all()
 
-    # Group by script_name
-    by_name: dict = defaultdict(
+    by_name = defaultdict(
         lambda: {"passed": 0, "failed": 0, "healed": 0, "runs": 0})
     for r in rows:
         n = r["script_name"]
@@ -52,18 +45,17 @@ def flakiness(request: Request, limit: int = 20):
         if r["status"] == "failed":
             by_name[n]["failed"] += 1
 
-    # Flaky = has both passes and failures
     flaky = []
     for name, counts in by_name.items():
         if counts["passed"] > 0 and counts["failed"] > 0:
             fail_rate = round(counts["failed"] / counts["runs"] * 100, 1)
             flaky.append({
-                "script_name": name,
-                "total_runs":  counts["runs"],
-                "passed":      counts["passed"],
-                "healed":      counts["healed"],
-                "failed":      counts["failed"],
-                "fail_rate":   fail_rate,
+                "script_name":     name,
+                "total_runs":      counts["runs"],
+                "passed":          counts["passed"],
+                "healed":          counts["healed"],
+                "failed":          counts["failed"],
+                "fail_rate":       fail_rate,
                 "flakiness_score": fail_rate,
             })
 
@@ -73,7 +65,6 @@ def flakiness(request: Request, limit: int = 20):
 
 @router.get("/selectors")
 def top_broken_selectors(request: Request, limit: int = 20):
-    """Most frequently broken selectors — guides where to invest in fixes."""
     tenant = request.state.tenant
     with engine.connect() as conn:
         rows = conn.execute(
@@ -81,8 +72,7 @@ def top_broken_selectors(request: Request, limit: int = 20):
             .order_by(heal_events.c.created_at.desc()).limit(2000)
         ).mappings().all()
 
-    counts: dict = defaultdict(
-        lambda: {"total": 0, "healed": 0, "strategy": {}})
+    counts = defaultdict(lambda: {"total": 0, "healed": 0, "strategy": {}})
     for h in rows:
         sel = h["selector"] or "unknown"
         counts[sel]["total"] += 1
@@ -93,11 +83,11 @@ def top_broken_selectors(request: Request, limit: int = 20):
 
     result = [
         {
-            "selector":       sel,
-            "break_count":    d["total"],
-            "healed_count":   d["healed"],
-            "heal_rate":      round(d["healed"] / d["total"] * 100, 1),
-            "top_strategy":   max(d["strategy"], key=d["strategy"].get) if d["strategy"] else None,
+            "selector":     sel,
+            "break_count":  d["total"],
+            "healed_count": d["healed"],
+            "heal_rate":    round(d["healed"] / d["total"] * 100, 1),
+            "top_strategy": max(d["strategy"], key=d["strategy"].get) if d["strategy"] else None,
         }
         for sel, d in counts.items()
     ]
@@ -107,7 +97,6 @@ def top_broken_selectors(request: Request, limit: int = 20):
 
 @router.get("/usage")
 def usage(request: Request):
-    """Daily usage vs tier limits for the past 30 days."""
     tenant = request.state.tenant
     tier = tenant.get("tier", "free")
     limits = TIER_LIMITS.get(tier, TIER_LIMITS["free"])
@@ -123,10 +112,10 @@ def usage(request: Request):
     today_row = next((r for r in rows if r["date"] == today), None)
 
     return {
-        "tier":              tier,
-        "daily_limit":       limits["scripts_per_day"],
-        "used_today":        today_row["scripts_run"] if today_row else 0,
-        "heals_today":       today_row["heals"] if today_row else 0,
-        "llm_calls_today":   today_row["llm_calls"] if today_row else 0,
-        "history":           [dict(r) for r in rows],
+        "tier":            tier,
+        "daily_limit":     limits["scripts_per_day"],
+        "used_today":      today_row["scripts_run"] if today_row else 0,
+        "heals_today":     today_row["heals"] if today_row else 0,
+        "llm_calls_today": today_row["llm_calls"] if today_row else 0,
+        "history":         [dict(r) for r in rows],
     }

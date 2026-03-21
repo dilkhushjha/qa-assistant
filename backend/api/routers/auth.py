@@ -1,28 +1,23 @@
 """
 auth.py router — Tenant registration and API key management.
-
 POST /auth/register   → create tenant + first API key
 POST /auth/keys       → generate additional API key
 GET  /auth/keys       → list keys for current tenant
 DELETE /auth/keys/{k} → revoke a key
 """
-# ── sys.path fix ──
 from core.database import engine, tenants, api_keys, now
 from sqlalchemy import select, update
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Request
-from datetime import datetime, timezone
 import secrets
 import uuid
-import sys as _sys
-import os as _os
-_BACKEND_DIR = _os.path.abspath(__file__)
-_BACKEND_DIR = _os.path.dirname(_BACKEND_DIR)
-_BACKEND_DIR = _os.path.dirname(_BACKEND_DIR)
-_BACKEND_DIR = _os.path.dirname(_BACKEND_DIR)
-if _BACKEND_DIR not in _sys.path:
-    _sys.path.insert(0, _BACKEND_DIR)
-# ── sys.path fix ──
+import sys
+import os
+
+_BACKEND_DIR = os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -31,7 +26,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 class RegisterRequest(BaseModel):
     name:  str
     email: str
-    tier:  str = "free"   # free | starter | pro | enterprise
+    tier:  str = "free"
 
 
 class KeyRequest(BaseModel):
@@ -40,12 +35,10 @@ class KeyRequest(BaseModel):
 
 @router.post("/register")
 def register(req: RegisterRequest):
-    """Create a new tenant and return their first API key."""
     tenant_id = str(uuid.uuid4())[:8]
     key = f"hb_live_{secrets.token_urlsafe(24)}"
 
     with engine.begin() as conn:
-        # Check email uniqueness
         existing = conn.execute(
             select(tenants).where(tenants.c.email == req.email)
         ).first()

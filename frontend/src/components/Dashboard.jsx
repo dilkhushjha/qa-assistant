@@ -54,7 +54,7 @@ const inp = (x = {}) => ({ background: "rgba(255,255,255,0.05)", border: `1px so
 
 function useApi(key) {
     return useCallback(async (method, path, body) => {
-        const r = await fetch(`${API}${path}`, { method, headers: { "Content-Type": "application/json", ...(key ? { Authorization: `Bearer ${key}` } : {}) }(body ? { body: JSON.stringify(body) } : {}) });
+        const r = await fetch(`${API}${path}`, { method, headers: { "Content-Type": "application/json", ...(key ? { Authorization: `Bearer ${key}` } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
         return r.json();
     }, [key]);
 }
@@ -240,7 +240,7 @@ function AppDashboard({ auth, onLogout }) {
 
     const connectRunSSE = useCallback((runId) => {
         if (esRef.current) esRef.current.close();
-        const es = new EventSource(`${API}/stream/${runId}`);
+        const es = new EventSource(`${API}/stream/${runId}?api_key=${encodeURIComponent(auth.key)}`);
         esRef.current = es;
         es.onmessage = e => {
             const msg = JSON.parse(e.data);
@@ -299,7 +299,7 @@ function AppDashboard({ auth, onLogout }) {
             <header style={{ height: 54, borderBottom: `1px solid ${C.border}`, padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, background: "rgba(7,9,15,0.92)", backdropFilter: "blur(14px)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 30, height: 30, borderRadius: 7, background: "linear-gradient(135deg,#6EE7B7,#3B82F6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>⚡</div>
-                    <div><div style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.02em" }}>HealBot</div><div style={{ fontSize: 9, color: C.muted, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "'DM Mono',monospace" }}>SaaS Platform</div></div>
+                    <div><div style={{ fontWeight: 700, fontSize: 24, letterSpacing: "-0.02em" }}>HealBot</div></div>
                 </div>
                 <nav style={{ display: "flex", gap: 4 }}>
                     {[{ id: "run", label: "▶  Run" }, { id: "batches", label: "Batches" }, { id: "analytics", label: "Analytics" }].map(n => (
@@ -447,4 +447,4 @@ export default function App() {
     if (!auth && showConnect) return <ConnectScreen onSuccess={login} onBack={() => setShowConnect(false)} />;
     if (!auth) return <RegisterScreen onSuccess={login} />;
     return <AppDashboard auth={auth} onLogout={logout} />;
-}
+} 
