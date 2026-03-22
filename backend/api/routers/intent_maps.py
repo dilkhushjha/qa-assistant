@@ -1,3 +1,8 @@
+"""
+intent_maps.py — Client custom keyword-to-intent mappings.
+POST /intent-maps   Register mappings
+GET  /intent-maps   Get current mappings
+"""
 from healing.intent_engine import register_intent_map
 from core.database import engine, intent_maps, now
 from sqlalchemy import select, update
@@ -6,17 +11,19 @@ from fastapi import APIRouter, Request
 import sys
 import os
 
+# ── sys.path fix ──────────────────────────────────────────────────────────────
 _BACKEND_DIR = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 router = APIRouter(prefix="/intent-maps", tags=["Intent Maps"])
 
 
 class IntentMapRequest(BaseModel):
-    mappings: list
+    mappings: list   # [{"keywords": [...], "intent": "..."}]
 
 
 @router.post("")

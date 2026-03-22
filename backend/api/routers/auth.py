@@ -1,8 +1,8 @@
 """
 auth.py router — Tenant registration and API key management.
 POST /auth/register   → create tenant + first API key
-POST /auth/keys       → generate additional API key
-GET  /auth/keys       → list keys for current tenant
+POST /auth/keys       → generate additional key
+GET  /auth/keys       → list keys
 DELETE /auth/keys/{k} → revoke a key
 """
 from core.database import engine, tenants, api_keys, now
@@ -14,10 +14,12 @@ import uuid
 import sys
 import os
 
+# ── sys.path fix ──────────────────────────────────────────────────────────────
 _BACKEND_DIR = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])

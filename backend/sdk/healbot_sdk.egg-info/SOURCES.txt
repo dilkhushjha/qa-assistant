@@ -1,0 +1,7 @@
+pyproject.toml
+setup.py
+healbot_sdk.egg-info/PKG-INFO
+healbot_sdk.egg-info/SOURCES.txt
+healbot_sdk.egg-info/dependency_links.txt
+healbot_sdk.egg-info/requires.txt
+healbot_sdk.egg-info/top_level.txt

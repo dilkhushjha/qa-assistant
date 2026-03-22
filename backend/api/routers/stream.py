@@ -1,11 +1,11 @@
 """
-stream.py router — Server-Sent Events for live run streaming.
-GET /stream/{run_id}       streams logs + metrics for a script run
-GET /stream/batch/{id}     streams batch-level progress counter
+stream.py — Server-Sent Events for live run streaming.
+GET /stream/{run_id}       live logs + metrics per script run
+GET /stream/batch/{id}     batch-level progress counter
 """
-from sqlalchemy import select
 from core.database import engine, batches, script_runs
 from core import run_context
+from sqlalchemy import select
 from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, HTTPException
 import time
@@ -13,10 +13,12 @@ import json
 import sys
 import os
 
+# ── sys.path fix ──────────────────────────────────────────────────────────────
 _BACKEND_DIR = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 router = APIRouter(prefix="/stream", tags=["Stream"])

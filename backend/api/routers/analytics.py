@@ -1,19 +1,25 @@
 """
 analytics.py router — Insights, trends, flakiness detection.
+GET /analytics/overview   High-level stats
+GET /analytics/flakiness  Scripts that intermittently pass/fail
+GET /analytics/selectors  Most-broken selectors
+GET /analytics/usage      Daily usage vs tier limits
 """
-from datetime import datetime
 from core.config import TIER_LIMITS
-from core.database import engine, script_runs, heal_events, usage_log, batches, get_analytics
+from core.database import engine, script_runs, heal_events, usage_log, get_analytics
 from sqlalchemy import select
 from fastapi import APIRouter, Request
+from datetime import datetime
 from collections import defaultdict
 import sys
 import os
 
+# ── sys.path fix ──────────────────────────────────────────────────────────────
 _BACKEND_DIR = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])

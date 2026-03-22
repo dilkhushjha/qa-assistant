@@ -1,12 +1,18 @@
+"""
+driver_factory.py — Selenium Chrome WebDriver factory.
+Set HEALBOT_HEADLESS=1 or pass --headless to run.py for headless mode.
+"""
 from core.logger import log
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 import sys
 import os
 
+# ── sys.path fix ──────────────────────────────────────────────────────────────
 _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 def get_driver(headless: bool = False, ctx=None) -> webdriver.Chrome:

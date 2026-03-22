@@ -13,9 +13,11 @@ from core.logger import log
 import sys
 import os
 
+# ── sys.path fix ──────────────────────────────────────────────────────────────
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 def _xpath(el: dict) -> str | None:
@@ -62,7 +64,7 @@ def heal_selector(
         "screenshot": None,
     }
 
-    # 1. Memory
+    # 1. Memory (tenant-first, then global pool)
     cached = recall(old_selector, tenant_id=tenant_id)
     if cached:
         log("ENGINE", f"✅ Memory hit → {cached}", ctx=ctx)
@@ -85,7 +87,7 @@ def heal_selector(
             ctx.increment("failures")
         return result
 
-    # 5. DOM
+    # 5. DOM heuristic
     dom_el, score = dom_heal(context, resolved_intent, ctx=ctx)
     result["dom_score"] = score
     result["dom_candidate"] = _xpath(dom_el)

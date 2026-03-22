@@ -234,7 +234,11 @@ function AppDashboard({ auth, onLogout }) {
     useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [logs]);
 
     useEffect(() => {
-        if (view === "batches") call("GET", "/batches").then(setBatches).catch(() => { });
+        if (view === "batches") {
+            call("GET", "/batches").then(setBatches).catch(() => { });
+            const t = setInterval(() => call("GET", "/batches").then(setBatches).catch(() => { }), 3000);
+            return () => clearInterval(t);
+        }
         if (view === "analytics") call("GET", "/analytics/overview").then(setAnalytics).catch(() => { });
     }, [view, call]);
 
@@ -299,7 +303,7 @@ function AppDashboard({ auth, onLogout }) {
             <header style={{ height: 54, borderBottom: `1px solid ${C.border}`, padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, background: "rgba(7,9,15,0.92)", backdropFilter: "blur(14px)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 30, height: 30, borderRadius: 7, background: "linear-gradient(135deg,#6EE7B7,#3B82F6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>⚡</div>
-                    <div><div style={{ fontWeight: 700, fontSize: 24, letterSpacing: "-0.02em" }}>HealBot</div></div>
+                    <div><div style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.02em" }}>HealBot</div><div style={{ fontSize: 9, color: C.muted, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "'DM Mono',monospace" }}>SaaS Platform</div></div>
                 </div>
                 <nav style={{ display: "flex", gap: 4 }}>
                     {[{ id: "run", label: "▶  Run" }, { id: "batches", label: "Batches" }, { id: "analytics", label: "Analytics" }].map(n => (
@@ -382,7 +386,14 @@ function AppDashboard({ auth, onLogout }) {
             {view === "batches" && (
                 <div style={{ flex: 1, padding: 24, overflowY: "auto" }}>
                     <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
-                        <div style={{ fontSize: 16, fontWeight: 700 }}>Batch History</div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                            <div style={{ fontSize: 16, fontWeight: 700 }}>Batch History</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: C.green }}><div style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, animation: 'pulse 1.4s ease infinite' }} />Live</div>
+                                <button className="btn" onClick={() => call("GET", "/batches").then(setBatches).catch(() => { })} style={{ fontSize: 11, color: C.muted, background: "none", border: "none", borderRadius: 7, padding: "4px 12px", fontFamily: "inherit" }}>↺ Refresh</button>
+                            </div>
+                        </div>
+                        <div style={{ fontSize: 11, color: C.dim, fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>Using key: {auth.key?.slice(0, 20)}… — pytest must use the same key</div>
                         {batches.length === 0 ? (
                             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 48, textAlign: "center", color: C.muted, fontSize: 14 }}>No batches yet — go to Run and press "Run Sample Script"</div>
                         ) : batches.map(b => (
@@ -447,4 +458,4 @@ export default function App() {
     if (!auth && showConnect) return <ConnectScreen onSuccess={login} onBack={() => setShowConnect(false)} />;
     if (!auth) return <RegisterScreen onSuccess={login} />;
     return <AppDashboard auth={auth} onLogout={logout} />;
-} 
+}

@@ -1,0 +1,8 @@
+selenium>=4.0.0
+
+[playwright]
+playwright>=1.40.0
+
+[robot]
+robotframework>=6.0
+robotframework-seleniumlibrary>=6.0

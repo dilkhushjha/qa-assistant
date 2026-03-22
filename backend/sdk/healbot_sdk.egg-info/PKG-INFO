@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: healbot-sdk
+Version: 1.0.0
+Summary: Universal plug-n-play self-healing adapter for any test framework
+Requires-Python: >=3.10
+Requires-Dist: selenium>=4.0.0
+Provides-Extra: playwright
+Requires-Dist: playwright>=1.40.0; extra == "playwright"
+Provides-Extra: robot
+Requires-Dist: robotframework>=6.0; extra == "robot"
+Requires-Dist: robotframework-seleniumlibrary>=6.0; extra == "robot"
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
