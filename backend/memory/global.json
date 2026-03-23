@@ -7,5 +7,7 @@
   "//input[@id='broken-fname']": "//*[@id='first-name']",
   "//input[@id='broken-lname']": "//*[@id='last-name']",
   "//input[@id='broken-zip']": "//*[@id='postal-code']",
-  "//input[@id='broken-continue']": "//*[@id='continue']"
+  "//input[@id='broken-continue']": "//*[@id='continue']",
+  "//*[contains(@class,'shopping_cart_badge')]": "//*[@id='add-to-cart-sauce-labs-backpack']",
+  "[data-test='error']": "//*[@id='user-name']"
 }

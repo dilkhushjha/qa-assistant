@@ -1,0 +1,4 @@
+{
+  "//*[contains(@class,'shopping_cart_badge')]": "//*[@id='add-to-cart-sauce-labs-backpack']",
+  "[data-test='error']": "//*[@id='user-name']"
+}
